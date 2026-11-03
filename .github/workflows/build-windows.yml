@@ -1,0 +1,45 @@
+name: Build Windows Desktop App
+
+on:
+  workflow_dispatch: # 允许你在 GitHub 网页上手动点击按钮触发
+  push:
+    branches: [ master ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: 检出仓库源码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 编译前端静态站点
+        run: |
+          cd frontend
+          npm install
+          npm run generate
+          cd ..
+
+      - name: 编译后端服务包
+        run: |
+          cd backend
+          npm install
+          cd ..
+
+      - name: 云端打包 Windows EXE 安装包
+        run: |
+          npm install
+          npm run dist:win
+
+      - name: 收集并发布 EXE 安装程序
+        uses: actions/upload-artifact@v4
+        with:
+          name: HUOLIENIAO-Windows-Installer
+          path: |
+            desktop/release/*.exe
+            release/*.exe
