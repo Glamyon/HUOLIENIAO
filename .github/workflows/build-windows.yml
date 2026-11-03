@@ -34,14 +34,21 @@ jobs:
           npm install --registry=https://registry.npmjs.org/
           cd ..
 
-      - name: 自动下载 Windows 内置 FFmpeg 二进制文件
+      - name: 自动下载 Windows 原生二进制（FFmpeg 与 SQLite 预编译）
         shell: bash
         run: |
           mkdir -p build/win-bin
           mkdir -p desktop/build/win-bin
-          echo "正在极速下载 Windows FFmpeg..."
+          
+          echo "1. 下载 Windows FFmpeg..."
           curl -L -o desktop/build/win-bin/ffmpeg.exe https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-win32-x64
           cp desktop/build/win-bin/ffmpeg.exe build/win-bin/ffmpeg.exe
+          
+          echo "2. 下载 Windows SQLite 官方预编译包..."
+          curl -L -o sqlite.tar.gz https://github.com/WiseLibs/better-sqlite3/releases/download/v12.11.1/better-sqlite3-v12.11.1-electron-v136-win32-x64.tar.gz
+          tar -xzf sqlite.tar.gz
+          cp build/Release/better_sqlite3.node desktop/build/win-bin/better_sqlite3.node
+          cp build/Release/better_sqlite3.node build/win-bin/better_sqlite3.node
 
       - name: 云端一键打包 Windows EXE 安装包
         shell: bash
