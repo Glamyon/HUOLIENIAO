@@ -22,15 +22,20 @@ jobs:
         run: |
           cd frontend
           npm install
+          # 自动补全新手引导依赖库
+          npm install driver.js --save
           npm run generate
           cd ..
 
-      - name: 编译后端服务
+      - name: 准备 Windows 依赖与后端构建
         shell: bash
         run: |
           cd backend
           npm install
           cd ..
+          
+          # 自动准备 Windows 打包缓存目录
+          mkdir -p build/win-bin
 
       - name: 云端一键打包 Windows EXE 安装包
         shell: bash
