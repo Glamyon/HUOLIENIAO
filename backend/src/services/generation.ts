@@ -14,6 +14,7 @@ import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readIm
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
 import type { AIConfig } from './adapters/types'
+import { ensurePublicImageUrl } from './picrd.js'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
 
 type TaskType = 'image' | 'video'
@@ -71,6 +72,10 @@ interface GenerateVideoParams {
   watermark?: boolean
   configId?: number
   forceNew?: boolean
+  // AutoDL 专属参数
+  mode?: string
+  stylePreset?: string
+  autodl?: any
 }
 
 export async function generateImage(params: GenerateImageParams): Promise<number> {
@@ -153,6 +158,9 @@ export async function generateVideo(params: GenerateVideoParams): Promise<number
       seed: params.seed,
       promptExtend: params.promptExtend,
       watermark: params.watermark,
+      mode: params.mode,
+      stylePreset: params.stylePreset,
+      autodl: params.autodl,
     })
 
     logTaskStart('VideoTask', 'enqueue', {
@@ -246,10 +254,10 @@ async function processTask(id: number, config: AIConfig) {
       }))
     } else {
       const adapter = getVideoAdapter(config.provider)
-      const resolvedImageUrl = await normalizeVideoReferenceUrl(params.imageUrl)
-      const resolvedFirstFrameUrl = await normalizeVideoReferenceUrl(params.firstFrameUrl)
-      const resolvedLastFrameUrl = await normalizeVideoReferenceUrl(params.lastFrameUrl)
-      const resolvedReferenceImageUrls = await normalizeVideoReferenceUrls(params.referenceImageUrls)
+      const resolvedImageUrl = await normalizeVideoReferenceUrl(params.imageUrl, config.provider)
+      const resolvedFirstFrameUrl = await normalizeVideoReferenceUrl(params.firstFrameUrl, config.provider)
+      const resolvedLastFrameUrl = await normalizeVideoReferenceUrl(params.lastFrameUrl, config.provider)
+      const resolvedReferenceImageUrls = await normalizeVideoReferenceUrls(params.referenceImageUrls, config.provider)
       // 视频使用公网地址；短音色按厂商能力使用 data URL 或公网地址。
       const resolvedReferenceVideoUrls = resolvePublicMediaUrls(params.referenceVideoUrls, 'video')
       const resolvedReferenceAudioUrls = await resolveReferenceAudioUrls(params.referenceAudioUrls, config.provider)
@@ -274,6 +282,9 @@ async function processTask(id: number, config: AIConfig) {
         seed: params.seed,
         promptExtend: params.promptExtend,
         watermark: params.watermark,
+        mode: params.mode,
+        stylePreset: params.stylePreset,
+        autodl: params.autodl,
       }))
     }
 
@@ -641,10 +652,22 @@ async function normalizeReferenceImages(refs: string[] | null | undefined): Prom
   return normalized.filter((item): item is string => !!item).slice(0, 6)
 }
 
-async function normalizeVideoReferenceUrl(value: string | null | undefined): Promise<string | null> {
+async function normalizeVideoReferenceUrl(value: string | null | undefined, provider?: string): Promise<string | null> {
   const raw = String(value || '').trim()
   if (!raw) return null
   if (raw.startsWith('data:image/')) return raw
+
+  // AutoDL 专属：必须为公网可下载地址，本地图片自动通过 picrd 上传转为 7 天临时公网直链
+  if ((provider || '').toLowerCase() === 'autodl') {
+    try {
+      return await ensurePublicImageUrl(raw)
+    } catch (err) {
+      logTaskWarn('VideoTask', 'picrd-upload-failed', { path: raw, error: (err as Error).message })
+      return raw
+    }
+  }
+
+  // 其他厂商（火山引擎/MiniMax等）保持原有的 Data URL 逻辑不变
   if (raw.startsWith('static/') || raw.startsWith('/static/')) {
     const localPath = raw.startsWith('/static/') ? raw.slice(1) : raw
     try {
@@ -658,10 +681,10 @@ async function normalizeVideoReferenceUrl(value: string | null | undefined): Pro
   return raw
 }
 
-async function normalizeVideoReferenceUrls(refs: string[] | null | undefined): Promise<string[]> {
+async function normalizeVideoReferenceUrls(refs: string[] | null | undefined, provider?: string): Promise<string[]> {
   if (!Array.isArray(refs) || !refs.length) return []
   const normalized = await Promise.all(
-    Array.from(new Set(refs.map((item) => String(item || '').trim()).filter(Boolean))).map((item) => normalizeVideoReferenceUrl(item)),
+    Array.from(new Set(refs.map((item) => String(item || '').trim()).filter(Boolean))).map((item) => normalizeVideoReferenceUrl(item, provider)),
   )
   return normalized.filter((item): item is string => !!item)
 }
@@ -700,5 +723,9 @@ function normalizeStoredVideoResolution(resolution: string | null | undefined): 
   const value = String(resolution || '').trim().toLowerCase()
   if (value === '480p' || value === '720p' || value === '1080p') return value
   if (value === '2k') return '2K'
+  // AutoDL 原生分辨率透传 (如 768p竖(768*1376)、1088p横(1920*1088) 等)
+  if (resolution && resolution.includes('p') && (resolution.includes('竖') || resolution.includes('横'))) {
+    return resolution.trim()
+  }
   return undefined
 }

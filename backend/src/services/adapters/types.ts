@@ -79,6 +79,7 @@ export interface AIConfig {
   baseUrl: string
   apiKey: string
   model: string
+  settings?: any
 }
 
 export interface ImageGenerationRecord {
@@ -88,7 +89,7 @@ export interface ImageGenerationRecord {
   size?: string | null
   frameType?: string | null
   referenceImages?: string | null
-  // ... 其他字段
+  [key: string]: any
 }
 
 export interface VideoGenerationRecord {
@@ -111,7 +112,14 @@ export interface VideoGenerationRecord {
   seed?: number | null
   promptExtend?: number | boolean | null
   watermark?: number | boolean | null
-  // ... 其他字段
+
+  // AutoDL 专属扩展字段
+  mode?: '高质模式' | '高速模式' | string | null
+  stylePreset?: string | null
+  style_preset?: string | null
+  autodl?: AutoDLVideoOptions | null
+  refImages?: string[] | null
+  [key: string]: any
 }
 
 export interface ImageGenResponse {
@@ -140,4 +148,24 @@ export interface VideoPollResponse {
   videoUrl?: string
   duration?: number
   error?: string
+}
+
+// ============ AutoDL 专属扩展选项 ============
+
+export type VideoProvider = 'volcengine' | 'minimax' | 'bailian' | 'autodl'
+
+export interface AutoDLVideoOptions {
+  workflow_id: 'minimax_h3_801' | 'minimax_h3_802' | 'minimax_h3_804' | 'minimax_h3_z0902' | string
+  resolution?: string
+  duration?: number
+  mode?: '高质模式' | '高速模式'
+  style_preset?:
+    | '武打模式-真人-武戏+真实质感'
+    | '情感模式-真人-文戏+微表情'
+    | '日常模式-真人-生活化动态'
+    | '通用动漫-二次元风格化'
+    | '玄幻修仙-特效与场景张力'
+    | '复古胶片-怀旧电影质感'
+    | string
+  ref_images?: string[]
 }

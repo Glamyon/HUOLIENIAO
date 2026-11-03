@@ -9,6 +9,13 @@ import { redactUrl, logTaskError, logTaskProgress, logTaskSuccess } from '../uti
 
 const app = new Hono()
 
+/** 辅助校验：支持系统内置厂商及 AutoDL 视频厂商 */
+function checkProvider(serviceType: string, provider: string): boolean {
+  const p = (provider || '').toLowerCase()
+  if (p === 'autodl' && serviceType === 'video') return true
+  return isOfficialProvider(serviceType, provider)
+}
+
 /** 归一化 temperature 入参：null=未设置；合法值 0~2；非法抛错 */
 function normalizeTemperature(v: any): number | null {
   if (v === null || v === undefined || v === '') return null
@@ -45,6 +52,19 @@ function geminiHeaders(apiKey?: string, withJson = false) {
 function buildProbe(serviceType: string, provider: string, baseUrl: string, model?: string, apiKey?: string) {
   const p = provider.toLowerCase()
   const m = model || ''
+
+  if (p === 'autodl') {
+    // AutoDL MiniMax H3 探针：探测 ComfyUI 工作流端点连通性 (严格无 Bearer 前缀)
+    const workflow = m || 'minimax_h3_801'
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (apiKey) headers.Authorization = apiKey.trim()
+    return {
+      method: 'POST',
+      url: joinProviderUrl(baseUrl, '', `/${workflow}`),
+      headers,
+      body: { prompt: 'probe test' },
+    }
+  }
 
   if (p === 'gemini') {
     // 探针统一走 generateContent:文本运行时(AI SDK)走的就是它,官方与中转站都支持;
@@ -134,7 +154,7 @@ app.post('/', async (c) => {
   if (!body.service_type || !body.provider) {
     return badRequest(c, '需要 service_type 与 provider')
   }
-  if (!isOfficialProvider(body.service_type, body.provider)) {
+  if (!checkProvider(body.service_type, body.provider)) {
     return badRequest(c, '不支持的 service_type/provider')
   }
 
@@ -173,7 +193,7 @@ app.post('/test', async (c) => {
   if (!body.service_type || !body.provider || !body.base_url) {
     return badRequest(c, '需要 service_type、provider 与 base_url')
   }
-  if (!isOfficialProvider(body.service_type, body.provider)) {
+  if (!checkProvider(body.service_type, body.provider)) {
     return badRequest(c, '不支持的 service_type/provider')
   }
 
@@ -195,7 +215,7 @@ app.post('/test', async (c) => {
       body: probe.body ? JSON.stringify(probe.body) : undefined,
     })
     const text = await resp.text()
-    const reachable = [200, 204, 400, 401, 403].includes(resp.status)
+    const reachable = [200, 204, 400, 401, 403, 422].includes(resp.status)
     const payload = {
       ok: resp.ok,
       reachable,
@@ -256,7 +276,7 @@ app.put('/:id', async (c) => {
 
   const serviceType = 'service_type' in body ? body.service_type : existing.serviceType
   const provider = 'provider' in body ? body.provider : existing.provider
-  if (!isOfficialProvider(serviceType, provider)) {
+  if (!checkProvider(serviceType, provider)) {
     return badRequest(c, '不支持的 service_type/provider')
   }
 

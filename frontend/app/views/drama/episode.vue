@@ -814,17 +814,39 @@
                       <span class="video-param-name">{{ t('episode.inspector.duration') }}</span>
                       <span class="video-param-control">
                         <input
-                          :value="selectedSb.duration || 10"
+                          :value="selectedSb.duration || videoDurationDefault"
                           type="number"
-                          min="2"
-                          max="30"
+                          :min="videoDurationMin"
+                          :max="videoDurationMax"
                           class="input video-duration-input"
                           @change="onVideoDurationChange"
                         />
-                        <span class="video-param-unit">{{ t('episode.inspector.durationUnit') }}</span>
+                        <span class="video-param-unit">{{ isAutoDLVideo ? 's (1-15)' : t('episode.inspector.durationUnit') }}</span>
                       </span>
                     </div>
                     <div class="video-param-hint">{{ t('episode.inspector.durationHint') }}</div>
+                    <!-- AutoDL 801/802 专属：生成模式 -->
+                    <div v-if="supportsMode" class="video-param-row" style="margin-top: 6px;">
+                      <span class="video-param-name">生成模式</span>
+                      <span class="video-param-control">
+                        <select v-model="autoDLMode" class="input" style="height: 24px; padding: 1px 6px; font-size: 11px;">
+                          <option v-for="opt in autoDLModeOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
+                        </select>
+                      </span>
+                    </div>
+                    <!-- AutoDL 804 专属：风格预设 -->
+                    <div v-if="supportsStylePreset" class="video-param-row" style="margin-top: 6px;">
+                      <span class="video-param-name">风格预设</span>
+                      <span class="video-param-control">
+                        <select v-model="autoDLStylePreset" class="input" style="height: 24px; padding: 1px 6px; font-size: 11px; max-width: 170px;">
+                          <option v-for="opt in autoDLStylePresetOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
+                        </select>
+                      </span>
+                    </div>
+                    <!-- AutoDL z0902 专属：多参考图提示 -->
+                    <div v-if="currentAutoDLWorkflow === 'minimax_h3_z0902'" class="video-param-hint" style="margin-top: 4px;">
+                      z0902 工作流支持最多 6 张分镜参考图
+                    </div>
                   </section>
                   <div class="video-inspector-effective">
                     {{ t('episode.inspector.effective', { model: effectiveVideoModelLabel || t('episode.vid.defaultModel'), res: episodeResolutionShort, dur: effectiveVideoDuration }) }}
@@ -2120,21 +2142,37 @@ const RESOLUTION_TIERS = {
   volcengine: ['480p', '720p'],
   minimax: ['720p', '1080p'],
   aliyun: ['480p', '720p', '1080p'],
+  autodl: [
+    '480p竖(480*864)',
+    '480p横(864*480)',
+    '768p竖(768*1376)',
+    '768p横(1376*768)',
+    '1088p竖(1088*1920)',
+    '1088p横(1920*1088)',
+    '1440p竖(1440*2560)',
+    '1440p横(2560*1440)',
+  ],
 }
 const RESOLUTION_DISPLAY = {
   volcengine: { '480p': '480p', '720p': '720p', '1080p': '720p' },
   minimax: { '480p': '768P', '720p': '768P', '1080p': '2K' },
   aliyun: { '480p': '480P', '720p': '720P', '1080p': '1080P' },
+  // AutoDL 档位本身即原生分辨率，原样显示
+  autodl: Object.fromEntries(RESOLUTION_TIERS.autodl.map(k => [k, k])),
 }
 const resolutionProvider = computed(() => RESOLUTION_TIERS[selectedVideoConfig.value?.provider] ? selectedVideoConfig.value.provider : 'volcengine')
 const resolutionOptions = computed(() => RESOLUTION_TIERS[resolutionProvider.value].map(key => ({
   key,
-  model: `${RESOLUTION_DISPLAY[resolutionProvider.value][key]} · ${t(`episode.resolution.${key === '480p' ? 'smooth' : key === '720p' ? 'hd' : 'uhd'}`)}`,
+  model: resolutionProvider.value === 'autodl'
+    ? key
+    : `${RESOLUTION_DISPLAY[resolutionProvider.value][key]} · ${t(`episode.resolution.${key === '480p' ? 'smooth' : key === '720p' ? 'hd' : 'uhd'}`)}`,
 })))
 const episodeResolution = computed({
   get: () => {
     const v = episode.value?.resolution
-    return resolutionOptions.value.some(o => o.key === v) ? v : '720p'
+    const opts = resolutionOptions.value
+    if (opts.some(o => o.key === v)) return v
+    return (opts.find(o => o.key === '720p') || opts.find(o => o.key === '768p横(1376*768)') || opts[0]).key
   },
   set: (val) => { void changeEpisodeResolution(val) },
 })
@@ -2205,7 +2243,7 @@ const isWan3Video = computed(() => selectedVideoConfig.value?.provider === 'aliy
   || bareModelName(videoModel.value).startsWith('wan3.0-video'))
 
 // 参考图上限（Wan 3.0 官方 10 张，其他模型 9 张），绑定素材收集与 @名字 映射统一读取
-const refImageLimit = computed(() => isWan3Video.value ? 10 : 9)
+const refImageLimit = computed(() => currentAutoDLWorkflow.value === 'minimax_h3_z0902' ? 6 : isWan3Video.value ? 10 : 9)
 
 // 本次生成的生效配置（模型/分辨率/时长），用于右侧小结与批量确认弹窗
 const effectiveVideoModelLabel = computed(() => {
@@ -2218,7 +2256,50 @@ const episodeResolutionLabel = computed(() =>
 // 短档位标签（480p / 768P / 2K 等厂商原生档位），用于底部生效配置小结
 const episodeResolutionShort = computed(() =>
   RESOLUTION_DISPLAY[resolutionProvider.value][episodeResolution.value] || episodeResolution.value)
-const effectiveVideoDuration = computed(() => Number(selectedSb.value?.duration || 10))
+// ===== AutoDL MiniMax H3 工作流（801 / 802 / 804 / z0902）=====
+const isAutoDLVideo = computed(() =>
+  selectedVideoConfig.value?.provider?.toLowerCase() === 'autodl'
+  || (effectiveVideoModelLabel.value || '').toLowerCase().startsWith('minimax_h3')
+)
+const currentAutoDLWorkflow = computed(() => {
+  if (!isAutoDLVideo.value) return null
+  const m = (effectiveVideoModelLabel.value || '').toLowerCase()
+  if (m.includes('801')) return 'minimax_h3_801'
+  if (m.includes('802')) return 'minimax_h3_802'
+  if (m.includes('804')) return 'minimax_h3_804'
+  if (m.includes('z0902')) return 'minimax_h3_z0902'
+  return 'minimax_h3_801'
+})
+const supportsMode = computed(() =>
+  isAutoDLVideo.value && (currentAutoDLWorkflow.value === 'minimax_h3_801' || currentAutoDLWorkflow.value === 'minimax_h3_802')
+)
+const supportsStylePreset = computed(() =>
+  isAutoDLVideo.value && currentAutoDLWorkflow.value === 'minimax_h3_804'
+)
+const autoDLMode = ref('高质模式')
+const autoDLModeOptions = [
+  { key: '高质模式', label: '高质模式 (Quality)' },
+  { key: '高速模式', label: '高速模式 (Fast Speed)' },
+]
+const autoDLStylePreset = ref('武打模式-真人-武戏+真实质感')
+const autoDLStylePresetOptions = [
+  { key: '武打模式-真人-武戏+真实质感', label: '武打模式-真人-武戏+真实质感' },
+  { key: '情感模式-真人-文戏+微表情', label: '情感模式-真人-文戏+微表情' },
+  { key: '日常模式-真人-生活化动态', label: '日常模式-真人-生活化动态' },
+  { key: '通用动漫-二次元风格化', label: '通用动漫-二次元风格化' },
+  { key: '玄幻修仙-特效与场景张力', label: '玄幻修仙-特效与场景张力' },
+  { key: '复古胶片-怀旧电影质感', label: '复古胶片-怀旧电影质感' },
+]
+// 时长：AutoDL 1~15s（默认 5s），其他服务商 2~30s（默认 10s）
+const videoDurationMin = computed(() => isAutoDLVideo.value ? 1 : 2)
+const videoDurationMax = computed(() => isAutoDLVideo.value ? 15 : 30)
+const videoDurationDefault = computed(() => isAutoDLVideo.value ? 5 : 10)
+// 提交/显示用的分镜时长：AutoDL 下夹到 1~15
+function shotDuration(sb) {
+  const v = Number(sb?.duration || videoDurationDefault.value)
+  return isAutoDLVideo.value ? Math.min(15, Math.max(1, v)) : v
+}
+const effectiveVideoDuration = computed(() => shotDuration(selectedSb.value))
 const batchVideoTotalDuration = computed(() =>
   batchVideoConfirm.value.targets.reduce((sum, sb) => sum + (Number(sb.duration) || 5), 0))
 
@@ -3316,10 +3397,10 @@ function resolveVideoPromptRefs(sb) {
 function onVideoDurationChange(e) {
   const sb = selectedSb.value
   if (!sb) return
-  const min = 2
-  const max = 30
+  const min = videoDurationMin.value
+  const max = videoDurationMax.value
   let v = Math.round(Number(e.target.value))
-  if (!Number.isFinite(v)) v = Number(sb.duration || 10)
+  if (!Number.isFinite(v)) v = Number(sb.duration || videoDurationDefault.value)
   v = Math.min(max, Math.max(min, v))
   e.target.value = v
   updateField(sb, 'duration', v)
@@ -3374,7 +3455,9 @@ async function genVid(sb, opts = {}) {
     storyboard_id: sb.id,
     drama_id: dramaId,
     prompt: resolveVideoPromptRefs(sb),
-    duration: Number(sb.duration || 10),
+    duration: shotDuration(sb),
+    ...(supportsMode.value ? { mode: autoDLMode.value } : {}),
+    ...(supportsStylePreset.value ? { style_preset: autoDLStylePreset.value } : {}),
     aspect_ratio: dramaAspectRatio.value,
     generate_audio: true,
     model: bareModelName(videoModel.value) || undefined,

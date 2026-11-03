@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="flam-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF3366" />
+      <stop offset="50%" stop-color="#FF5E7E" />
+      <stop offset="100%" stop-color="#FFA07A" />
+    </linearGradient>
+    <linearGradient id="wing-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D81B60" />
+      <stop offset="100%" stop-color="#FF6584" />
+    </linearGradient>
+    <radialGradient id="bg-glow" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#FF3366" stop-opacity="0.28" />
+      <stop offset="70%" stop-color="#16191F" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#0D0F12" stop-opacity="1" />
+    </radialGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle with subtle border -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg-glow)" stroke="#FF3366" stroke-width="4" stroke-opacity="0.35" />
+
+  <!-- Flamingo Geometric Body & Film Camera Play Aesthetic -->
+  <g filter="url(#glow)">
+    <!-- Flamingo Neck & Head Curve (Stylized S-Curve) -->
+    <path d="M 320 120 
+             C 320 85, 275 75, 245 95 
+             C 215 115, 210 155, 235 185 
+             C 255 210, 260 240, 240 275 
+             C 225 300, 200 320, 175 330
+             L 175 365
+             C 220 355, 260 325, 285 285
+             C 310 245, 305 205, 280 180
+             C 265 165, 265 140, 280 130
+             C 290 122, 308 125, 320 120 Z" fill="url(#flam-grad)" />
+
+    <!-- Flamingo Beak Downward Pointing Angle -->
+    <path d="M 320 120 L 375 148 L 332 162 Z" fill="#FFF0F3" />
+    <path d="M 355 138 L 375 148 L 332 162 Z" fill="#16191F" />
+
+    <!-- Wing & Film Camera Lens / Play Triangle Geometry -->
+    <!-- Wing Layer 1 (Outer Dynamic Arc) -->
+    <path d="M 215 280 
+             C 270 270, 360 310, 395 385 
+             C 340 395, 260 380, 205 340 Z" fill="url(#wing-grad)" opacity="0.9" />
+
+    <!-- Wing Layer 2 (Inner Play Triangle Symbol) -->
+    <path d="M 240 295 L 345 350 L 240 395 Z" fill="url(#flam-grad)" />
+
+    <!-- Stylized Slender Legs -->
+    <path d="M 245 395 L 235 445 M 265 390 L 275 425 L 290 445" stroke="url(#flam-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>
