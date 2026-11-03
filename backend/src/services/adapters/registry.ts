@@ -8,20 +8,22 @@ import { VolcEngineImageAdapter } from './volcengine-image'
 import { VolcEngineVideoAdapter } from './volcengine-video'
 import { MiniMaxVideoAdapter } from './minimax-video'
 import { AliyunWanVideoAdapter } from './aliyun-wan-video'
+import { AutoDLVideoAdapter } from './autodl-video'
 import type { ImageProviderAdapter, VideoProviderAdapter } from './types'
 
-// 图片 Adapter 注册表
+// 图片 Adapter 注册表 (完整保留原厂支持)
 export const imageAdapters: Record<string, ImageProviderAdapter> = {
   openai: new OpenAIImageAdapter(),
   gemini: new GeminiImageAdapter(),
   volcengine: new VolcEngineImageAdapter(),
 }
 
-// 视频 Adapter 注册表
+// 视频 Adapter 注册表 (保留原厂，追加 AutoDL)
 export const videoAdapters: Record<string, VideoProviderAdapter> = {
   volcengine: new VolcEngineVideoAdapter(),
   minimax: new MiniMaxVideoAdapter(),
   aliyun: new AliyunWanVideoAdapter(),
+  autodl: new AutoDLVideoAdapter(),
 }
 
 /**
