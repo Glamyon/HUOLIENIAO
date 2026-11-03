@@ -27,7 +27,7 @@ export default defineNuxtConfig({
 
   // 引入火烈鸟品牌视觉系统与全局主题规范样式
   css: [
-    '~/assets/studio.css',
+    '~/app/assets/studio.css',
   ],
 
   // 本地开发服务端口设置 (默认 3013)
