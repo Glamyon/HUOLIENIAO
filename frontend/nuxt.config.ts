@@ -56,7 +56,7 @@ export default defineNuxtConfig({
         {
           name: 'drama-detail',
           path: '/drama/:id',
-          file: resolve(__dirname, 'app/views/drama/index.vue'),
+          file: resolve(__dirname, 'app/views/drama/detail.vue'),
         },
         {
           name: 'drama-episode',
