@@ -40,7 +40,7 @@ const WAN_MEDIA_TYPES = new Set([
 ])
 
 /**
- * 兼容项目原有扁平入参，也支持 Wan 3.0 官方 model/input/parameters 结构。
+ * 兼容项目原有扁平入参，也支持 Wan 3.0 官方结构与 AutoDL MiniMax H3 专属参数。
  */
 function normalizeVideoRequest(body: any) {
   const input = body.input && typeof body.input === 'object' && !Array.isArray(body.input) ? body.input : {}
@@ -70,6 +70,9 @@ function normalizeVideoRequest(body: any) {
     seed: body.seed ?? parameters.seed,
     prompt_extend: body.prompt_extend ?? parameters.prompt_extend,
     watermark: body.watermark ?? parameters.watermark,
+    mode: body.mode ?? parameters.mode,
+    style_preset: body.style_preset ?? body.stylePreset ?? parameters.style_preset,
+    autodl: body.autodl,
     official_media: media,
   }
 }
@@ -102,8 +105,13 @@ function validateVideoRequest(body: any, provider?: string): string | null {
   const last = Boolean(body.last_frame_url)
   const file = Boolean(body.file_url)
   const link = Boolean(body.link_url)
+  const p = (provider || '').toLowerCase()
 
-  if ((provider || '').toLowerCase() === 'aliyun') {
+  if (p === 'autodl') {
+    if (imgs > 9) return 'AutoDL 参考图片最多 9 张'
+    if (body.model === 'minimax_h3_z0902' && imgs > 6) return 'AutoDL z0902 工作流参考图片最多 6 张'
+    if (vids > 0 || auds > 0) return 'AutoDL 视频工作流仅支持图片参考'
+  } else if (p === 'aliyun') {
     if (imgs > 10 || vids > 5 || auds > 5) return 'Wan 3.0 参考素材超限：图片≤10、视频≤5、音频≤5'
     if (last && !first) return 'Wan 3.0 尾帧必须与首帧同时传入'
     if (file && link) return 'Wan 3.0 file 与 link 不能同时传入'
@@ -227,6 +235,9 @@ app.post('/', async (c) => {
         seed: videoBody!.seed,
         promptExtend: videoBody!.prompt_extend,
         watermark: videoBody!.watermark,
+        mode: videoBody!.mode,
+        stylePreset: videoBody!.style_preset,
+        autodl: videoBody!.autodl,
         configId,
       })
 
