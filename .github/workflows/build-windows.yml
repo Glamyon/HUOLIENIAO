@@ -1,7 +1,7 @@
 name: Build Windows Desktop App
 
 on:
-  workflow_dispatch: # 允许你在 GitHub 网页上手动点击按钮触发
+  workflow_dispatch:
   push:
     branches: [ master ]
 
@@ -12,28 +12,31 @@ jobs:
       - name: 检出仓库源码
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js 20
+      - name: 配置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
-      - name: 编译前端静态站点
+      - name: 安装各模块依赖并构建
+        shell: bash
         run: |
-          cd frontend
+          echo "=== 1. 安装根目录依赖 ==="
           npm install
-          npm run generate
-          cd ..
+          
+          echo "=== 2. 安装并编译前端 ==="
+          cd frontend && npm install && npm run generate && cd ..
+          
+          echo "=== 3. 安装后端依赖 ==="
+          cd backend && npm install && cd ..
+          
+          echo "=== 4. 检查桌面端依赖 ==="
+          if [ -d "desktop" ]; then
+            cd desktop && npm install && cd ..
+          fi
 
-      - name: 编译后端服务包
+      - name: 云端一键打包 Windows EXE 安装包
+        shell: bash
         run: |
-          cd backend
-          npm install
-          cd ..
-
-      - name: 云端打包 Windows EXE 安装包
-        run: |
-          npm install
           npm run dist:win
 
       - name: 收集并发布 EXE 安装程序
@@ -43,3 +46,4 @@ jobs:
           path: |
             desktop/release/*.exe
             release/*.exe
+            build/release/*.exe
