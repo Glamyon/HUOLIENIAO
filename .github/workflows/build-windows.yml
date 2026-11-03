@@ -26,31 +26,31 @@ jobs:
           npm run generate
           cd ..
 
-      - name: 编译后端服务（清除原作者私有源，强制走官方公网）
+      - name: 编译后端服务
         shell: bash
         run: |
           cd backend
-          # 清除包含私有源地址的旧锁文件，防止401鉴权拦截
           rm -f package-lock.json
           npm install --registry=https://registry.npmjs.org/
           cd ..
-          
-          # 创建打包所需缓存目录
+
+      - name: 自动下载 Windows 内置 FFmpeg 二进制文件
+        shell: bash
+        run: |
           mkdir -p build/win-bin
+          mkdir -p desktop/build/win-bin
+          echo "正在极速下载 Windows FFmpeg..."
+          curl -L -o desktop/build/win-bin/ffmpeg.exe https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-win32-x64
+          cp desktop/build/win-bin/ffmpeg.exe build/win-bin/ffmpeg.exe
 
       - name: 云端一键打包 Windows EXE 安装包
         shell: bash
         run: |
-          # 根目录与桌面目录双重保障打包
-          if [ -d "desktop" ]; then
-            cd desktop
-            rm -f package-lock.json
-            npm install --registry=https://registry.npmjs.org/
-            npm run dist:win || npx electron-builder --win
-            cd ..
-          else
-            npm run dist:win || npx electron-builder --win
-          fi
+          cd desktop
+          rm -f package-lock.json
+          npm install --registry=https://registry.npmjs.org/
+          npm run dist:win
+          cd ..
 
       - name: 收集并发布 EXE 安装程序
         uses: actions/upload-artifact@v4
@@ -60,4 +60,3 @@ jobs:
             desktop/release/*.exe
             release/*.exe
             build/release/*.exe
-            dist/*.exe
