@@ -1,233 +1,368 @@
 <template>
-  <div class="shell">
-    <!-- Header -->
-    <header class="header">
+  <div class="app-layout">
+    <!-- 火烈鸟 HUOLIENIAO 全局顶栏导航 -->
+    <header class="app-header">
       <div class="header-left">
-        <button class="brand" @click="navigateTo('/')">
-          <div class="brand-mark">
-            <img v-if="showBrandImage" :src="brandLogo" alt="火宝短剧" class="brand-logo" @error="showBrandImage = false" />
-            <span v-else class="brand-fallback">火</span>
+        <NuxtLink to="/" class="brand-identity" :title="t('common.brandName') || '火烈鸟 HUOLIENIAO'">
+          <!-- 火烈鸟全新矢量标识 -->
+          <div class="brand-logo-wrap">
+            <svg class="brand-logo-svg" viewBox="0 0 64 64" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="flam-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF3366" />
+                  <stop offset="100%" stop-color="#FF6584" />
+                </linearGradient>
+              </defs>
+              <rect width="64" height="64" rx="14" fill="#16191F" stroke="#FF3366" stroke-width="1.5" stroke-opacity="0.35" />
+              <!-- Flamingo S-Neck + Eye -->
+              <path d="M 40 14 C 40 10, 34 8, 30 11 C 26 14, 26 19, 29 23 C 32 26, 32 30, 29 35 C 27 38, 24 40, 21 41 L 21 45 C 27 44, 32 40, 35 35 C 38 30, 37 25, 34 22 C 32 20, 32 17, 34 16 C 36 15, 38 15, 40 14 Z" fill="url(#flam-logo-grad)" />
+              <path d="M 40 14 L 48 18 L 42 20 Z" fill="#FFF0F3" />
+              <path d="M 45 17 L 48 18 L 42 20 Z" fill="#16191F" />
+              <!-- Play Symbol Wing -->
+              <path d="M 29 36 L 44 44 L 29 51 Z" fill="url(#flam-logo-grad)" />
+            </svg>
           </div>
           <div class="brand-text">
-            <span class="brand-name">火宝短剧</span>
-            <span class="brand-sub">Huobao Shorts</span>
+            <div class="brand-title-row">
+              <span class="brand-name">火烈鸟</span>
+              <span class="brand-en">HUOLIENIAO</span>
+              <span class="brand-badge">AI 短剧</span>
+            </div>
+            <span class="brand-sub">一站式短剧创作平台</span>
           </div>
-        </button>
+        </NuxtLink>
+
+        <!-- 主功能导航选项卡 -->
+        <nav class="main-nav">
+          <NuxtLink to="/" class="nav-tab" :class="{ active: isCurrentPath('/') }">
+            <Film :size="15" :stroke-width="1.8" />
+            <span>{{ t('nav.projects') || '项目' }}</span>
+          </NuxtLink>
+          <NuxtLink to="/assets" class="nav-tab" :class="{ active: isCurrentPath('/assets') }">
+            <Layers :size="15" :stroke-width="1.8" />
+            <span>{{ t('nav.assets') || '资产库' }}</span>
+          </NuxtLink>
+          <NuxtLink to="/skills" class="nav-tab" :class="{ active: isCurrentPath('/skills') }">
+            <Sparkles :size="15" :stroke-width="1.8" />
+            <span>{{ t('nav.skills') || 'Agent 技能' }}</span>
+          </NuxtLink>
+          <NuxtLink to="/settings" class="nav-tab" :class="{ active: isCurrentPath('/settings') }">
+            <Settings :size="15" :stroke-width="1.8" />
+            <span>{{ t('nav.settings') || '设置' }}</span>
+          </NuxtLink>
+        </nav>
       </div>
 
-      <nav class="header-nav">
-        <NuxtLink to="/" class="nav-link" :class="{ active: route.path === '/' }">
-          <LayoutGrid :size="15" :stroke-width="1.8" />
-          <span>{{ t('layout.nav.projects') }}</span>
-        </NuxtLink>
-        <NuxtLink to="/settings" class="nav-link" :class="{ active: route.path === '/settings' }">
-          <Settings :size="15" :stroke-width="1.8" />
-          <span>{{ t('layout.nav.settings') }}</span>
-        </NuxtLink>
-      </nav>
-
+      <!-- 右侧控制区：语言切换 + GitHub 链接 -->
       <div class="header-right">
+        <!-- 多语言切换器 -->
+        <div class="lang-dropdown-wrap" @click.stop="toggleLangMenu">
+          <button class="btn btn-ghost btn-sm lang-btn" :title="t('common.language') || '切换语言'">
+            <Globe :size="14" :stroke-width="1.8" />
+            <span class="current-lang-text">{{ currentLangLabel }}</span>
+            <ChevronDown :size="12" :stroke-width="1.8" />
+          </button>
+          <div v-if="showLangMenu" class="lang-menu card">
+            <button
+              v-for="opt in langOptions"
+              :key="opt.code"
+              class="lang-menu-item"
+              :class="{ active: locale === opt.code }"
+              @click="changeLanguage(opt.code)"
+            >
+              <span>{{ opt.label }}</span>
+              <span class="lang-code">{{ opt.code.toUpperCase() }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 官方 GitHub 开源链接 -->
         <a
-          class="github-link"
-          href="https://github.com/chatfire-AI/huobao-drama"
+          href="https://github.com/Glamyon/HUOLIENIAO"
           target="_blank"
-          rel="noopener"
-          aria-label="GitHub"
-          title="GitHub"
+          rel="noopener noreferrer"
+          class="btn btn-icon github-link"
+          title="GitHub 源码仓库 (Glamyon/HUOLIENIAO)"
         >
-          <Github :size="15" :stroke-width="1.8" />
+          <Github :size="16" :stroke-width="1.8" />
         </a>
-        <ThemeToggle />
-        <LocaleSwitcher />
       </div>
     </header>
 
-    <!-- AI 服务未配置引导横幅(缺任一类型即提示) -->
-    <div v-if="missingConfigLabels.length" class="config-banner">
-      <TriangleAlert :size="14" :stroke-width="1.8" />
-      <span>{{ t('layout.banner.missing', { types: missingConfigLabels.join(t('common.listJoin')) }) }}</span>
-      <NuxtLink to="/settings" class="config-banner-link">{{ t('layout.banner.goSettings') }}</NuxtLink>
-    </div>
-
-    <main class="content">
+    <!-- 页面核心内容挂载点 -->
+    <main class="app-main-content">
       <slot />
     </main>
+
+    <!-- 全局轻提示容器 (vue-sonner) -->
+    <Toaster position="top-right" richColors :theme="'dark'" />
   </div>
 </template>
 
-<script setup>
-import { LayoutGrid, Settings, TriangleAlert, Github } from 'lucide-vue-next'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { aiConfigAPI } from '~/composables/useApi'
-import brandLogo from '~/assets/brand-logo.png'
+import { Film, Layers, Sparkles, Settings, Globe, Github, ChevronDown } from 'lucide-vue-next'
+import { Toaster } from 'vue-sonner'
 
-const { t, locale } = useI18n()
 const route = useRoute()
-const showBrandImage = ref(true)
+const { t, locale } = useI18n()
 
-// 渲染时求值，语言切换即时生效（不能模块级常量固化）
-const SERVICE_TYPE_LABELS = computed(() => ({
-  text: t('common.serviceType.text'),
-  image: t('common.serviceType.image'),
-  video: t('common.serviceType.video'),
-}))
-const missingConfigLabels = ref([])
-
-async function checkAiConfigs() {
-  try {
-    const configs = await aiConfigAPI.list()
-    const labels = SERVICE_TYPE_LABELS.value
-    missingConfigLabels.value = Object.entries(labels)
-      .filter(([type]) => !configs.some(c => c.service_type === type && c.is_active))
-      .map(([, label]) => label)
-  } catch { /* 配置检查失败不阻塞页面 */ }
+function isCurrentPath(path: string) {
+  if (path === '/') return route.path === '/'
+  return route.path.startsWith(path)
 }
 
-onMounted(checkAiConfigs)
-// 设置页保存配置后返回时重新检查(布局跨页面复用,onMounted 只触发一次)
-watch(() => route.path, checkAiConfigs)
-// 切换界面语言时横幅中已拼接的类型文案需要重算
-watch(locale, checkAiConfigs)
+const showLangMenu = ref(false)
+function toggleLangMenu() {
+  showLangMenu.value = !showLangMenu.value
+}
+function closeLangMenu() {
+  showLangMenu.value = false
+}
+
+const langOptions = [
+  { code: 'zh', label: '简体中文' },
+  { code: 'en', label: 'English' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ko', label: '한국어' },
+]
+
+const currentLangLabel = computed(() => {
+  const target = langOptions.find(o => o.code === locale.value)
+  return target ? target.label : '中文'
+})
+
+function changeLanguage(code: string) {
+  locale.value = code
+  showLangMenu.value = false
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('huolieniao_locale', code)
+  }
+}
+
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('click', closeLangMenu)
+    const saved = localStorage.getItem('huolieniao_locale')
+    if (saved && ['zh', 'en', 'ja', 'ko'].includes(saved)) {
+      locale.value = saved
+    }
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('click', closeLangMenu)
+  }
+})
 </script>
 
 <style scoped>
-.shell {
-  display: flex; flex-direction: column;
-  height: 100vh; overflow: hidden;
-  background: var(--bg-base);
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-1);
 }
 
-/* === Header === */
-.header {
-  display: flex; align-items: center;
-  height: 60px; flex-shrink: 0;
-  padding: 0 24px;
-  gap: 32px;
-  background: var(--header-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+.app-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background-color: var(--surface-base);
   border-bottom: 1px solid var(--border);
-  position: relative; z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
 }
 
-.header-left { display: flex; align-items: center; }
-
-.brand {
-  display: flex; align-items: center; gap: 11px;
-  background: transparent; border: none; cursor: pointer; padding: 4px 8px 4px 4px;
-  text-decoration: none; border-radius: var(--radius);
-  transition: background 0.18s var(--ease-out);
-}
-.brand:hover { background: var(--bg-hover); }
-.brand:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3.5px var(--button-focus);
-}
-.brand-mark {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 9px;
-  overflow: hidden;
-}
-.brand-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  display: block;
-}
-.brand-fallback {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-0);
-  line-height: 1;
-}
-.brand-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
-.brand-name {
-  font-size: 15px; font-weight: 700;
-  /* ChatFire 签名：品牌字标火焰橙渐变 */
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.01em;
-}
-.brand-sub {
-  font-size: 10px; font-weight: 400;
-  color: var(--text-3); margin-top: 1px;
-  letter-spacing: 0.04em;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
 }
 
-/* Nav — pill segmented group */
-.header-nav {
-  display: flex; gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--overlay-track);
+.brand-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-/* Header 右侧 — 语言切换器 */
-.header-right {
-  margin-left: auto;
-  display: flex; align-items: center;
-}
-/* GitHub 入口 — 与 ThemeToggle 同款圆形图标按钮 */
-.github-link {
+.brand-logo-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-pill);
-  color: var(--text-2);
-  transition: all 0.18s var(--ease-out);
-  line-height: 1;
+  border-radius: 8px;
+  transition: transform var(--transition-fast);
 }
-.github-link:hover { color: var(--text-0); background: var(--bg-hover); }
-.github-link:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3.5px var(--button-focus);
+
+.brand-identity:hover .brand-logo-wrap {
+  transform: scale(1.06);
 }
-.nav-link {
-  display: flex; align-items: center; gap: 6px;
-  min-height: 32px;
-  padding: 0 16px; border-radius: var(--radius-pill);
-  font-size: 13px; font-weight: 600;
-  color: var(--text-2); text-decoration: none;
-  transition: all 0.18s var(--ease-out);
-  border: none;
-  line-height: 1;
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
 }
-.nav-link:hover { color: var(--text-0); }
-.nav-link.active {
-  background: var(--seg-active-bg);
+
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-0);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.nav-link:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3.5px var(--button-focus);
+  letter-spacing: -0.2px;
 }
 
-/* Config banner — AI 服务未配置引导 */
-.config-banner {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 24px; flex-shrink: 0;
-  font-size: 12.5px; color: var(--warn-text);
-  background: var(--warn-bg);
-  border-bottom: 1px solid var(--warn-border);
-  position: relative; z-index: 9;
+.brand-en {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-text);
+  letter-spacing: 0.8px;
 }
-.config-banner-link {
-  margin-left: auto;
-  font-size: 12.5px; font-weight: 600;
-  color: var(--warn-link); text-decoration: none;
-  padding: 2px 10px; border-radius: var(--radius-pill);
-  border: 1px solid var(--warn-border);
-  transition: all 0.18s var(--ease-out);
-  line-height: 1.6;
-}
-.config-banner-link:hover { background: var(--warn-link-hover-bg); color: var(--warn-text); }
 
-/* Content */
-.content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.brand-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border: 1px solid var(--accent-border);
+}
+
+.brand-sub {
+  font-size: 10px;
+  color: var(--text-3);
+  line-height: 1.2;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: all var(--transition-fast);
+}
+
+.nav-tab:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-1);
+}
+
+.nav-tab.active {
+  background-color: var(--accent-bg);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-dropdown-wrap {
+  position: relative;
+}
+
+.lang-btn {
+  font-size: 12px;
+  gap: 5px;
+  padding: 4px 8px;
+}
+
+.current-lang-text {
+  font-size: 12px;
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 140px;
+  padding: 4px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.lang-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-2);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.lang-menu-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+.lang-menu-item.active {
+  color: var(--accent-text);
+  font-weight: 600;
+  background: var(--accent-bg);
+}
+
+.lang-code {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+
+.github-link {
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.github-link:hover {
+  color: var(--text-1);
+}
+
+.app-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .app-header { padding: 0 12px; }
+  .brand-sub { display: none; }
+  .brand-en { display: none; }
+  .main-nav span { display: none; }
+  .header-left { gap: 14px; }
+}
 </style>
