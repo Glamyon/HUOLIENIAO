@@ -21,28 +21,31 @@ jobs:
         shell: bash
         run: |
           cd frontend
-          npm install
-          # 自动补全新手引导依赖库
-          npm install driver.js --save
+          npm install --registry=https://registry.npmjs.org/
+          npm install driver.js --save --registry=https://registry.npmjs.org/
           npm run generate
           cd ..
 
-      - name: 准备 Windows 依赖与后端构建
+      - name: 编译后端服务（清除原作者私有源，强制走官方公网）
         shell: bash
         run: |
           cd backend
-          npm install
+          # 清除包含私有源地址的旧锁文件，防止401鉴权拦截
+          rm -f package-lock.json
+          npm install --registry=https://registry.npmjs.org/
           cd ..
           
-          # 自动准备 Windows 打包缓存目录
+          # 创建打包所需缓存目录
           mkdir -p build/win-bin
 
       - name: 云端一键打包 Windows EXE 安装包
         shell: bash
         run: |
+          # 根目录与桌面目录双重保障打包
           if [ -d "desktop" ]; then
             cd desktop
-            npm install
+            rm -f package-lock.json
+            npm install --registry=https://registry.npmjs.org/
             npm run dist:win || npx electron-builder --win
             cd ..
           else
