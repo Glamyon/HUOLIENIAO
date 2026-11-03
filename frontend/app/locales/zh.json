@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "火宝短剧",
+    "title": "火烈鸟短剧",
     "updateAvailable": "发现新版本 v{version}，可在「设置 → 关于更新」中升级"
   },
   "characterVoice": {
@@ -45,15 +45,26 @@
     "scene": "场景",
     "prop": "道具",
     "reference": "参考",
+    "brandName": "火烈鸟 HUOLIENIAO",
+    "brandSub": "一站式 AI 短剧创作平台",
+    "language": "界面语言",
     "serviceType": {
       "text": "文本",
       "image": "图片",
       "video": "视频"
     }
   },
+  "nav": {
+    "projects": "项目",
+    "assets": "资产库",
+    "skills": "Agent 技能",
+    "settings": "设置"
+  },
   "layout": {
     "nav": {
       "projects": "项目",
+      "assets": "资产库",
+      "skills": "Agent 技能",
       "settings": "设置"
     },
     "banner": {
@@ -116,7 +127,7 @@
   "index": {
     "hero": {
       "title": "项目启动台",
-      "sub": "从一个创意到一部短剧，AI 全流程为你代工",
+      "sub": "从一个创意到一部短剧，AI 全流程为你代工 · 火烈鸟 HUOLIENIAO",
       "projectCount": "{n} 个项目",
       "activeCount": "{n} 进行中",
       "styleCount": "{n} 种视觉风格"
@@ -288,13 +299,13 @@
     "ai": {
       "title": "AI 服务配置",
       "desc": "先用推荐模板快速落配置，再按服务类型微调。工作台创建集时会锁定所选图片和视频能力。",
-      "quickTitle": "火宝快捷配置",
+      "quickTitle": "火烈鸟快捷配置 / AutoDL 一键配置",
       "recommended": "推荐",
-      "quickDesc": "输入 Huobao API Key，一次写入文本、图片、视频三条推荐配置。",
-      "getKey": "前往火宝获取 Key",
+      "quickDesc": "输入 AutoDL Token 或 API Key，一次写入文本、图片、视频三条推荐配置。",
+      "getKey": "前往 AutoDL 获取 Token",
       "regionCn": "国内",
       "regionCom": "国外",
-      "applyQuick": "写入火宝配置",
+      "applyQuick": "写入火烈鸟配置",
       "manualTitle": "手动模板",
       "manualDesc": "选择服务类型后，直接用模板填充推荐的 `provider / base URL / model`。",
       "activeCount": "{n} 已启用",
@@ -304,13 +315,13 @@
       "setDefault": "设为该类型默认模型",
       "noBaseUrl": "未设置 Base URL",
       "test": "测试",
-      "apiKeyRequired": "请填写 Huobao API Key",
-      "quickApplied": "火宝快捷配置已写入",
+      "apiKeyRequired": "请填写 AutoDL Token / API Key",
+      "quickApplied": "火烈鸟快捷配置已写入",
       "defaultModelSwitched": "默认{type}模型已切换为 {model}",
       "meta": {
         "text": "剧本改写、角色场景提取、分镜拆解等 Agent 文本能力",
         "image": "角色图、场景图与镜头图等静态图像生成",
-        "video": "镜头视频直出生成，默认 Seedance 2.0"
+        "video": "镜头视频直出生成，支持 AutoDL MiniMax H3 算力集群"
       }
     },
     "styles": {
@@ -409,7 +420,7 @@
       "addTitle": "添加{type}服务",
       "sub": "推荐先选择模板，系统会自动填入更合理的 `Base URL` 与默认模型。",
       "name": "配置名称",
-      "namePlaceholder": "如 火宝默认图像服务",
+      "namePlaceholder": "如 火烈鸟默认图像服务",
       "provider": "服务商",
       "providerPlaceholder": "选择服务商",
       "priority": "优先级",
@@ -802,7 +813,11 @@
       "durationHint": "修改即保存到分镜，列表与批量生成同步生效",
       "effective": "{model} · {res} · {dur}s",
       "boundRefs": "绑定参考图",
-      "noBoundRefs": "暂无绑定素材（在中间「参考素材」区点击绑定）"
+      "noBoundRefs": "暂无绑定素材（在中间「参考素材」区点击绑定）",
+      "autodlMode": "AutoDL 处理模式",
+      "autodlStylePreset": "AutoDL 动作风格预设",
+      "resolution": "原生分辨率",
+      "refLimit": "参考图上限"
     },
     "tasks": {
       "title": "生成任务列表",
@@ -917,7 +932,7 @@
     "helpTitle": "使用引导",
     "index": {
       "welcome": {
-        "title": "👋 欢迎使用火宝短剧",
+        "title": "👋 欢迎使用火烈鸟短剧",
         "desc": "小说 → 剧本 → 资产 → 分镜 → 视频 → 成片，一站式 AI 短剧制作。先配置 AI 服务，再创建第一个项目。"
       },
       "create": {
@@ -926,13 +941,13 @@
       },
       "settings": {
         "title": "第 1 步 · 配置 AI 服务",
-        "desc": "所有 AI 功能都要先配置。点这里进「设置」页，粘贴 Huobao API Key 一键完成文本/图片/视频三条配置。"
+        "desc": "所有 AI 功能都要先配置。点这里进「设置」页，粘贴 AutoDL Token 一键完成文本/图片/视频三条配置。"
       }
     },
     "settings": {
       "quick": {
         "title": "最快上手：快捷配置",
-        "desc": "粘贴 Huobao API Key，一键写入文本、图片、视频三条推荐配置，支持连通性测试。"
+        "desc": "粘贴 AutoDL Token，一键写入文本、图片、视频三条推荐配置，支持连通性测试。"
       },
       "nav": {
         "title": "全部配置都在这",
@@ -960,6 +975,40 @@
         "title": "随时重看引导",
         "desc": "点这个「?」按钮可重新播放本页引导。祝创作顺利！"
       }
+    }
+  },
+  "autodl": {
+    "providerName": "AutoDL 算力云 (MiniMax H3)",
+    "workflow": {
+      "minimax_h3_801": "MiniMax H3 (801标准·推荐)",
+      "minimax_h3_802": "MiniMax H3 (802标准)",
+      "minimax_h3_804": "MiniMax H3 (804动作风格化)",
+      "minimax_h3_z0902": "MiniMax H3 (z0902多图一致性)"
+    },
+    "mode": {
+      "quality": "高质模式 (Quality)",
+      "speed": "高速模式 (Fast Speed)"
+    },
+    "stylePreset": {
+      "martial": "武打模式-真人-武戏+真实质感",
+      "emotion": "情感模式-真人-文戏+微表情",
+      "daily": "日常模式-真人-生活化动态",
+      "anime": "通用动漫-二次元风格化",
+      "xianxia": "玄幻修仙-特效与场景张力",
+      "film": "复古胶片-怀旧电影质感"
+    },
+    "resolution": {
+      "480p_v": "480p竖 (480*864)",
+      "480p_h": "480p横 (864*480)",
+      "768p_v": "768p竖 (768*1376) · 推荐",
+      "768p_h": "768p横 (1376*768)",
+      "1088p_v": "1088p竖 (1088*1920) · 1080P全高清",
+      "1088p_h": "1088p横 (1920*1088) · 1080P全高清",
+      "1440p_v": "1440p竖 (1440*2560) · 2K超高清",
+      "1440p_h": "1440p横 (2560*1440) · 2K超高清"
+    },
+    "picrd": {
+      "notice": "参考素材已通过 picrd 安全加密中转，有效期 7 天，任务完成后自动清理。"
     }
   }
 }
