@@ -18,20 +18,31 @@ jobs:
           node-version: 22
 
       - name: 编译前端静态页面
+        shell: bash
         run: |
           cd frontend
           npm install
           npm run generate
+          cd ..
 
-      - name: 安装后端依赖
+      - name: 编译后端服务
+        shell: bash
         run: |
           cd backend
           npm install
+          cd ..
 
       - name: 云端一键打包 Windows EXE 安装包
+        shell: bash
         run: |
-          npm install
-          npm run dist:win
+          if [ -d "desktop" ]; then
+            cd desktop
+            npm install
+            npm run dist:win || npx electron-builder --win
+            cd ..
+          else
+            npm run dist:win || npx electron-builder --win
+          fi
 
       - name: 收集并发布 EXE 安装程序
         uses: actions/upload-artifact@v4
@@ -41,3 +52,4 @@ jobs:
             desktop/release/*.exe
             release/*.exe
             build/release/*.exe
+            dist/*.exe
