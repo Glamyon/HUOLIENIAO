@@ -2,6 +2,9 @@ import { resolve } from 'path'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  // 指定源码根目录为 app 文件夹，一举解决所有 composables、assets 寻址
+  srcDir: 'app',
+
   // SPA 纯客户端渲染模式（轻量、低延迟、同源代理）
   ssr: false,
 
@@ -27,7 +30,7 @@ export default defineNuxtConfig({
 
   // 引入火烈鸟品牌视觉系统与全局主题规范样式
   css: [
-    '~/app/assets/studio.css',
+    '~/assets/studio.css',
   ],
 
   // 本地开发服务端口设置 (默认 3013)
