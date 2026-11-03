@@ -7,7 +7,7 @@ import { VideoAdapter, VideoGenerationOptions, VideoGenerationResult, VideoStatu
 import { ensurePublicImageUrl } from '../picrd'
 
 export interface AutoDLAdapterConfig {
-  apiKey: string // AutoDL Token (无需 Bearer 前缀)
+  apiKey?: string // AutoDL Token (无需 Bearer 前缀)
   baseUrl?: string
   model?: string
   settings?: any
@@ -31,13 +31,16 @@ export class AutoDLVideoAdapter implements VideoAdapter {
   private baseUrl: string
   private defaultWorkflow: string
 
-  constructor(config: AutoDLAdapterConfig) {
-    this.apiKey = (config.apiKey || '').trim()
-    this.baseUrl = (config.baseUrl || AUTODL_DEFAULT_BASE_URL).replace(/\/+$/, '')
-    this.defaultWorkflow = config.model || 'minimax_h3_801'
+  // 支持无参初始化（new AutoDLVideoAdapter()），防止启动时 undefined 崩溃
+  constructor(config?: Partial<AutoDLAdapterConfig>) {
+    this.apiKey = (config?.apiKey || '').trim()
+    this.baseUrl = (config?.baseUrl || AUTODL_DEFAULT_BASE_URL).replace(/\/+$/, '')
+    this.defaultWorkflow = config?.model || 'minimax_h3_801'
   }
 
   async generateVideo(options: VideoGenerationOptions): Promise<VideoGenerationResult> {
+    const apiKey = (options as any).apiKey || options.autodl?.apiKey || this.apiKey
+    const baseUrl = ((options as any).baseUrl || options.autodl?.baseUrl || this.baseUrl).replace(/\/+$/, '')
     const workflowId = options.autodl?.workflow_id || this.defaultWorkflow
     const resolution = options.resolution || '768p竖(768*1376)'
     const dim = RESOLUTION_MAP[resolution] || { width: 768, height: 1376 }
@@ -82,12 +85,12 @@ export class AutoDLVideoAdapter implements VideoAdapter {
     }
     // z0902: 禁止 mode 与 style_preset，仅接收图片与提示词
 
-    const endpoint = `${this.baseUrl}/${workflowId}`
+    const endpoint = `${baseUrl}/${workflowId}`
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: this.apiKey, // 严格无 Bearer 前缀
+        Authorization: apiKey, // 严格无 Bearer 前缀
       },
       body: JSON.stringify(payload),
     })
@@ -110,12 +113,14 @@ export class AutoDLVideoAdapter implements VideoAdapter {
     }
   }
 
-  async pollStatus(taskId: string): Promise<VideoStatusResult> {
-    const endpoint = `${this.baseUrl}/result/${taskId}`
+  async pollStatus(taskId: string, options?: any): Promise<VideoStatusResult> {
+    const apiKey = options?.apiKey || options?.autodl?.apiKey || this.apiKey
+    const baseUrl = (options?.baseUrl || options?.autodl?.baseUrl || this.baseUrl).replace(/\/+$/, '')
+    const endpoint = `${baseUrl}/result/${taskId}`
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
-        Authorization: this.apiKey, // 严格无 Bearer 前缀
+        Authorization: apiKey, // 严格无 Bearer 前缀
       },
     })
 
